@@ -20,10 +20,19 @@ public class GreetingPluginFunctionalTest {
         File projectDir = new File("build/functionalTest");
         Files.createDirectories(projectDir.toPath());
         writeString(new File(projectDir, "settings.gradle"), "");
-        writeString(new File(projectDir, "build.gradle"),
-            "plugins {" +
-                "  id('com.example.greeting')" +
-                "}");
+
+        String buildGradle = """
+            plugins {
+                id('com.example.greeting')
+            }
+            
+            greet {
+                num1 = 1
+                num2 = 2
+            }
+            """;
+
+        writeString(new File(projectDir, "build.gradle"), buildGradle);
 
         // Run the build
         BuildResult result = GradleRunner.create()
@@ -34,7 +43,7 @@ public class GreetingPluginFunctionalTest {
             .build();
 
         // Verify the result
-        assertTrue(result.getOutput().contains("Hello from plugin 'com.example.greeting'"));
+        assertTrue(result.getOutput().contains("Hello, 1 + 2 = 3"));
     }
 
     private void writeString(File file, String string) throws IOException {

@@ -5,8 +5,14 @@ import org.gradle.api.Project;
 
 public class GreetingPlugin implements Plugin<Project> {
     public void apply(Project project) {
-        project.getTasks().register("greet", task -> {
-            task.doLast(s -> System.out.println("Hello from plugin 'com.example.greeting'"));
+
+        GreetingPluginExtension extension = project.getExtensions()
+                                                       .create("greet", GreetingPluginExtension.class);
+
+        project.task("greet").doLast(task -> {
+            int sum = extension.getNum1() + extension.getNum2();
+
+            System.out.println("Hello, " + extension.getNum1() + " + " + extension.getNum2() + " = " + sum);
         });
     }
 }
