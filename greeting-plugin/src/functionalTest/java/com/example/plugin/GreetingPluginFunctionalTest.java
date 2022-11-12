@@ -26,10 +26,19 @@ public class GreetingPluginFunctionalTest {
                 id('com.example.greeting')
             }
             
-            greet {
+            def output = sum {
                 num1 = 1
                 num2 = 2
-            }
+            }.calculate()
+            
+            def output2 = sub {
+                num1 = 1
+                num2 = 2
+            }.calculate()
+            
+            println "1 + 2 = ${output}"
+            println "1 - 2 = ${output2}"
+            
             """;
 
         writeString(new File(projectDir, "build.gradle"), buildGradle);
@@ -38,12 +47,13 @@ public class GreetingPluginFunctionalTest {
         BuildResult result = GradleRunner.create()
             .forwardOutput()
             .withPluginClasspath()
-            .withArguments("greet")
+            .withArguments("sum")
             .withProjectDir(projectDir)
             .build();
 
         // Verify the result
-        assertTrue(result.getOutput().contains("Hello, 1 + 2 = 3"));
+        assertTrue(result.getOutput().contains("1 + 2 = 3"));
+        assertTrue(result.getOutput().contains("1 - 2 = -1"));
     }
 
     private void writeString(File file, String string) throws IOException {
