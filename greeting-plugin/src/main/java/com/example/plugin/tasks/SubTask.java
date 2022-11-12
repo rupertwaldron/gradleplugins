@@ -8,7 +8,6 @@ import org.gradle.api.tasks.TaskAction;
 
 public abstract class SubTask extends DefaultTask {
 
-  private static int staticResult;
   @Input
   public abstract Property<Integer> getNum1();
 
@@ -19,13 +18,8 @@ public abstract class SubTask extends DefaultTask {
   @TaskAction
   public int calculate() {
     int result = Calc.SUB.calculate(getNum1().get(), getNum2().get());
-    staticResult = result;
     System.out.println("Calculating the result... " + result);
     return result;
-  }
-
-  public static int getResult() {
-    return staticResult;
   }
 
 }

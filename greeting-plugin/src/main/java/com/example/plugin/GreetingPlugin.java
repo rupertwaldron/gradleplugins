@@ -8,11 +8,8 @@ import org.gradle.api.Project;
 public class GreetingPlugin implements Plugin<Project> {
   public void apply(Project project) {
 
-    project.getExtensions().create("calculation", GreetingPluginExtension.class);
-
     project.getTasks().create("sum", SumTask.class).setGroup("calculation");
     project.getTasks().create("sub", SubTask.class).setGroup("calculation");
-
 
   }
 }
