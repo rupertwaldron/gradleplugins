@@ -4,7 +4,13 @@ import com.example.plugin.tasks.SumTask;
 
 public class GreetingPluginExtension {
 
+  private int result;
+
   public int getResult() {
-    return SumTask.getResult();
+    return result;
+  }
+
+  public void setResult(final int result) {
+    this.result = result;
   }
 }
