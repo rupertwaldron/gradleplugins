@@ -7,17 +7,24 @@ import org.gradle.api.tasks.TaskAction;
 
 public abstract class SumTask extends DefaultTask {
 
+  private static int staticResult;
   @Input
   public abstract Property<Integer> getNum1();
 
   @Input
   public abstract Property<Integer> getNum2();
 
+
   @TaskAction
   public int calculate() {
-    int output = getNum1().get() + getNum2().get();
-    System.out.println("Calculating the result... " + output);
-    return output;
+    int result = getNum1().get() + getNum2().get();
+    staticResult = result;
+    System.out.println("Calculating the result... " + result);
+    return result;
+  }
+
+  public static int getResult() {
+    return staticResult;
   }
 
 }
