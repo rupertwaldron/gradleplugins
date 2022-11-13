@@ -1,6 +1,5 @@
 package com.example.plugin.tasks;
 
-import com.example.plugin.calculators.Calc;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;

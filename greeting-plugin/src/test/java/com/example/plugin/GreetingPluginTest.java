@@ -16,5 +16,6 @@ public class GreetingPluginTest {
         // Verify the result
         assertNotNull(project.getTasks().findByName("sum"));
         assertNotNull(project.getTasks().findByName("sub"));
+        assertNotNull(project.getTasks().findByName("jwt"));
     }
 }
