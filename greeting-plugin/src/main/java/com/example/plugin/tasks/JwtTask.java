@@ -5,11 +5,10 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public abstract class JwtTask extends DefaultTask {
 
@@ -17,16 +16,18 @@ public abstract class JwtTask extends DefaultTask {
   public abstract Property<String> getJwtPath();
 
   @TaskAction
-  public String goAndFetchJwt() throws IOException {
+  public String goAndFetchJwt() {
+
     StringBuilder result = new StringBuilder();
-    URL url = new URL(getJwtPath().get());
-    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-    conn.setRequestMethod("GET");
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-      for (String line; (line = reader.readLine()) != null; ) {
-        result.append(line);
-      }
-    }
+    HttpClient client = HttpClient.newHttpClient();
+    HttpRequest request = HttpRequest.newBuilder()
+                              .uri(URI.create(getJwtPath().get()))
+                              .build();
+    client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(HttpResponse::body)
+        .thenAccept(result::append)
+        .join();
+
     return "Returned JWT -> " + result;
   }
 

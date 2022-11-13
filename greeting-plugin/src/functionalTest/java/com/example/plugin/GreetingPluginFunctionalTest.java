@@ -39,6 +39,11 @@ public class GreetingPluginFunctionalTest {
             println "1 + 2 = ${output}"
             println "1 - 2 = ${output2}"
             
+            def jwtToken = jwt {
+                 jwtPath = "https://ed2245ff-0869-4b36-9f82-5760a6f4ba6e.mock.pstmn.io/jwt"
+            }.goAndFetchJwt()
+            
+            println "jwt token = ${jwtToken}"
             """;
 
         writeString(new File(projectDir, "build.gradle"), buildGradle);
@@ -54,6 +59,7 @@ public class GreetingPluginFunctionalTest {
         // Verify the result
         assertTrue(result.getOutput().contains("1 + 2 = 3"));
         assertTrue(result.getOutput().contains("1 - 2 = -1"));
+        assertTrue(result.getOutput().contains("jwt token = Returned JWT -> hello"));
     }
 
     private void writeString(File file, String string) throws IOException {
