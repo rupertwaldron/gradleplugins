@@ -13,7 +13,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,11 +25,11 @@ public class GreetingPluginFunctionalTest {
   @Test
   public void canRunTask() throws IOException {
 
-    stubFor(get(WireMock.urlEqualTo("/api/jwt"))
-                  .willReturn(aResponse()
-                                  .withStatus(200)
-                                  .withHeader("Content-Type", APPLICATION_JSON)
-                                  .withBody("hello")));
+    stubFor(post(WireMock.urlEqualTo("/api/jwt"))
+                .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", APPLICATION_JSON)
+                                .withBody("dummy token")));
 
     // Setup the test build
     File projectDir = new File("build/functionalTest");
@@ -74,7 +74,7 @@ public class GreetingPluginFunctionalTest {
     // Verify the result
     assertTrue(result.getOutput().contains("1 + 2 = 3"));
     assertTrue(result.getOutput().contains("1 - 2 = -1"));
-    assertTrue(result.getOutput().contains("jwt token = Returned JWT -> hello"));
+    assertTrue(result.getOutput().contains("dummy token"));
   }
 
   private void writeString(File file, String string) throws IOException {

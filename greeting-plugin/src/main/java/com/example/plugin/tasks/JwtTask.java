@@ -20,15 +20,19 @@ public abstract class JwtTask extends DefaultTask {
 
     StringBuilder result = new StringBuilder();
     HttpClient client = HttpClient.newHttpClient();
+
     HttpRequest request = HttpRequest.newBuilder()
                               .uri(URI.create(getJwtPath().get()))
+                              .header("Content-Type", "application/json")
+                              .POST(HttpRequest.BodyPublishers.noBody())
                               .build();
+
     client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
         .thenApply(HttpResponse::body)
         .thenAccept(result::append)
         .join();
 
-    return "Returned JWT -> " + result;
+    return result.toString();
   }
 
 }
