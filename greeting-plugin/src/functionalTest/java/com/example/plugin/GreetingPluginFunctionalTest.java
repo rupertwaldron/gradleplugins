@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GreetingPluginFunctionalTest {
 
   private static final String APPLICATION_JSON = "application/json";
-  private static final String HTTP_LOCALHOST_9000_API_JWT = "http://localhost:9000/api/jwt";
+  private static final String JWT_URL = "http://localhost:9000/api/jwt";
   private static final String USERNAME = "bob";
   private static final String PASSWORD = "monkey";
 
@@ -40,7 +40,7 @@ public class GreetingPluginFunctionalTest {
     Files.createDirectories(projectDir.toPath());
     writeString(new File(projectDir, "settings.gradle"), "");
 
-    writeString(new File(projectDir, "build.gradle"), generateGradle(HTTP_LOCALHOST_9000_API_JWT, USERNAME, PASSWORD));
+    writeString(new File(projectDir, "build.gradle"), generateGradle(JWT_URL, USERNAME, PASSWORD));
 
     // Run the build
     BuildResult result = GradleRunner.create()
