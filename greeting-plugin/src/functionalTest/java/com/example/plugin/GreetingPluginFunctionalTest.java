@@ -2,7 +2,7 @@ package com.example.plugin;
 
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class GreetingPluginFunctionalTest {
@@ -52,7 +52,7 @@ public class GreetingPluginFunctionalTest {
         BuildResult result = GradleRunner.create()
             .forwardOutput()
             .withPluginClasspath()
-            .withArguments("sum")
+//            .withArguments("sum")
             .withProjectDir(projectDir)
             .build();
 

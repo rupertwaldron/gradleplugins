@@ -15,8 +15,9 @@ version = '0.0.1-SNAPSHOT'
 
 dependencies {
     // Use JUnit test framework for unit tests
-    implementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
-    testImplementation 'junit:junit:4.13'
+    testImplementation gradleTestKit()
+    testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
 }
 
 gradlePlugin {
@@ -29,6 +30,10 @@ gradlePlugin {
     }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 // Add a source set and a task for a functional test suite
 def functionalTest = sourceSets.create('functionalTest')
 gradlePlugin.testSourceSets(functionalTest)
@@ -36,6 +41,7 @@ gradlePlugin.testSourceSets(functionalTest)
 configurations[functionalTest.implementationConfigurationName].extendsFrom(configurations.testImplementation)
 
 def functionalTestTask = tasks.register('functionalTest', Test) {
+    useJUnitPlatform()
     testClassesDirs = functionalTest.output.classesDirs
     classpath = configurations[functionalTest.runtimeClasspathConfigurationName] + functionalTest.output
 }
