@@ -26,6 +26,7 @@ public class GreetingPluginFunctionalTest {
   public void canRunTask() throws IOException {
 
     stubFor(post(WireMock.urlEqualTo("/api/jwt"))
+                .withBasicAuth("bob", "monkey")
                 .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", APPLICATION_JSON)
@@ -56,6 +57,8 @@ public class GreetingPluginFunctionalTest {
                     
         def jwtToken = jwt {
              jwtPath = "http://localhost:9000/api/jwt"
+             username = "bob"
+             password = "monkey"
         }.goAndFetchJwt()
                     
         println "jwt token = ${jwtToken}"
