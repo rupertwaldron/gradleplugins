@@ -21,12 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GreetingPluginFunctionalTest {
 
   private static final String APPLICATION_JSON = "application/json";
+  private static final String HTTP_LOCALHOST_9000_API_JWT = "http://localhost:9000/api/jwt";
+  private static final String USERNAME = "bob";
+  private static final String PASSWORD = "monkey";
 
   @Test
   public void canRunTask() throws IOException {
 
     stubFor(post(WireMock.urlEqualTo("/api/jwt"))
-                .withBasicAuth("bob", "monkey")
+                .withBasicAuth(USERNAME, PASSWORD)
                 .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", APPLICATION_JSON)
@@ -36,6 +39,31 @@ public class GreetingPluginFunctionalTest {
     File projectDir = new File("build/functionalTest");
     Files.createDirectories(projectDir.toPath());
     writeString(new File(projectDir, "settings.gradle"), "");
+
+    writeString(new File(projectDir, "build.gradle"), generateGradle(HTTP_LOCALHOST_9000_API_JWT, USERNAME, PASSWORD));
+
+    // Run the build
+    BuildResult result = GradleRunner.create()
+                             .forwardOutput()
+                             .withPluginClasspath()
+//            .withArguments("sum")
+                             .withProjectDir(projectDir)
+                             .build();
+
+    // Verify the result
+    assertTrue(result.getOutput().contains("1 + 2 = 3"));
+    assertTrue(result.getOutput().contains("1 - 2 = -1"));
+    assertTrue(result.getOutput().contains("dummy token"));
+  }
+
+  private void writeString(File file, String string) throws IOException {
+    try (Writer writer = new FileWriter(file)) {
+      writer.write(string);
+    }
+  }
+
+
+  private String generateGradle(String jwtPath, String username, String password) {
 
     String buildGradle = """
         plugins {
@@ -56,33 +84,14 @@ public class GreetingPluginFunctionalTest {
         println "1 - 2 = ${output2}"
                     
         def jwtToken = jwt {
-             jwtPath = "http://localhost:9000/api/jwt"
-             username = "bob"
-             password = "monkey"
+             jwtPath = "%s"
+             username = "%s"
+             password = "%s"
         }.goAndFetchJwt()
                     
         println "jwt token = ${jwtToken}"
         """;
 
-    writeString(new File(projectDir, "build.gradle"), buildGradle);
-
-    // Run the build
-    BuildResult result = GradleRunner.create()
-                             .forwardOutput()
-                             .withPluginClasspath()
-//            .withArguments("sum")
-                             .withProjectDir(projectDir)
-                             .build();
-
-    // Verify the result
-    assertTrue(result.getOutput().contains("1 + 2 = 3"));
-    assertTrue(result.getOutput().contains("1 - 2 = -1"));
-    assertTrue(result.getOutput().contains("dummy token"));
-  }
-
-  private void writeString(File file, String string) throws IOException {
-    try (Writer writer = new FileWriter(file)) {
-      writer.write(string);
-    }
+        return String.format(buildGradle, jwtPath, username, password);
   }
 }
