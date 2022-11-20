@@ -7,12 +7,11 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Optional;
 
 public abstract class VmOptsTask extends DefaultTask {
 
@@ -29,16 +28,32 @@ public abstract class VmOptsTask extends DefaultTask {
 
     Component component = null;
 
-//    try {
-//      var file = new File(getRunConfigFilePath().get());
-//      JAXBContext jaxbContext = JAXBContext.newInstance(Component.class);
-//
-//      Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-//      component = (Component) jaxbUnmarshaller.unmarshal(file);
-//    } catch (Exception ex) {
-//      System.out.println("Exception caught = " + ex.getMessage());
-//    }
-//
+    try {
+      var file = new File(getRunConfigFilePath().get());
+      JAXBContext jaxbContext = JAXBContext.newInstance(Component.class);
+
+      Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+      component = (Component) jaxbUnmarshaller.unmarshal(file);
+
+
+      System.out.println("Component = " + component);
+
+      Optional.ofNullable(component)
+          .ifPresent(comp -> comp.setVmOption(getVmOption().get(), jwtToken));
+
+      System.out.println("Component = " + component);
+
+      Marshaller marshaller = jaxbContext.createMarshaller();
+
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+      marshaller.marshal(component, file);
+
+
+    } catch (Exception ex) {
+      System.out.println("Exception caught = " + ex.getMessage());
+    }
+
 //    component.getOptions().forEach(System.out::println);
 
 
@@ -60,46 +75,28 @@ public abstract class VmOptsTask extends DefaultTask {
 //  </configuration>
 //</component>
 
-    StringBuilder fileContentSB = new StringBuilder();
-
-    try (var fileReader = new FileReader(getRunConfigFilePath().get())) {
-      int ch;
-      while ((ch=fileReader.read())!=-1)
-        fileContentSB.append((char)ch);
-    } catch (FileNotFoundException e) {
-      System.out.println("Couldn't find file :: " + e.getMessage());
-    }
-
-    String fileContents = fileContentSB.toString();
-
-    String modifiedFileContents = modifyVmOption(fileContents, getVmOption().get(), jwtToken);
-    System.out.println(modifiedFileContents);
-
-    try (var fileWriter = new FileWriter("./src/functionalTest/resources/bob.xml")) {
-      fileWriter.write(modifiedFileContents);
-    } catch (IOException iox) {
-      System.out.println("Exception io = " + iox.getMessage());
-    }
-
-
-  }
+//    StringBuilder fileContentSB = new StringBuilder();
+//
+//    try (var fileReader = new FileReader(getRunConfigFilePath().get())) {
+//      int ch;
+//      while ((ch=fileReader.read())!=-1)
+//        fileContentSB.append((char)ch);
+//    } catch (FileNotFoundException e) {
+//      System.out.println("Couldn't find file :: " + e.getMessage());
+//    }
+//
+//    String fileContents = fileContentSB.toString();
+//
+//    String modifiedFileContents = modifyVmOption(fileContents, getVmOption().get(), jwtToken);
+//    System.out.println(modifiedFileContents);
+//
+//    try (var fileWriter = new FileWriter("./src/functionalTest/resources/bob.xml")) {
+//      fileWriter.write(modifiedFileContents);
+//    } catch (IOException iox) {
+//      System.out.println("Exception io = " + iox.getMessage());
+//    }
 
 
-  private String modifyVmOption(String fileContents, String vmOption, String value) {
-    int begin = fileContents.indexOf("<option name=\"VM_PARAMETERS\"");
-    int end = fileContents.indexOf("/>", begin);
-    String vmptions = fileContents.substring(begin + 29, end);
-
-    int indexOfOption = vmptions.indexOf(vmOption);
-
-    indexOfOption += vmOption.length() + 1;
-
-    int indexEndOfOtpion = vmptions.indexOf("\"", indexOfOption);
-
-    String optionValue = vmptions.substring(indexOfOption, indexEndOfOtpion);
-    System.out.println("Option text = " + optionValue);
-
-    return fileContents.replace(optionValue, value);
   }
 
 

@@ -14,9 +14,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @XmlAccessorType(XmlAccessType.FIELD)
 @Data
-public class Option implements Serializable {
+public class Module implements Serializable {
   @XmlAttribute
   private String name;
-  @XmlAttribute
-  private String value;
 }
