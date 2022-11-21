@@ -41,16 +41,25 @@ public class Configuration implements Serializable {
     System.out.println("Found option is :: " + foundVmOptionOrNew.getValue());
 
     String vmOptionList = foundVmOptionOrNew.getValue();
-    int startIndex = vmOptionList.indexOf(vmOption) + vmOption.length();
-    int endIndex = vmOptionList.indexOf(" ", startIndex) == -1 ? vmOptionList.length() : vmOptionList.indexOf(" ", startIndex);
+    int startIndexOfOption = vmOptionList.indexOf(vmOption);
 
-    System.out.println("Start index of " + vmOption + " = " + startIndex);
-    System.out.println("End index = " + endIndex);
+    String updatedVmOption;
 
-    String optionValue = vmOptionList.substring(startIndex, endIndex);
-    System.out.println("Option value = " + optionValue);
+    if (startIndexOfOption == -1) {
+      updatedVmOption = vmOptionList + " -D" + vmOption + "=" + value;
+    } else {
 
-    String updatedVmOption = vmOptionList.replace(optionValue, "=" + value);
+      int startIndex = startIndexOfOption + vmOption.length();
+      int endIndex = vmOptionList.indexOf(" ", startIndex) == -1 ? vmOptionList.length() : vmOptionList.indexOf(" ", startIndex);
+
+      System.out.println("Start index of " + vmOption + " = " + startIndex);
+      System.out.println("End index = " + endIndex);
+
+      String optionValue = vmOptionList.substring(startIndex, endIndex);
+      System.out.println("Option value = " + optionValue);
+
+      updatedVmOption = vmOptionList.replace(optionValue, "=" + value);
+    }
 
     foundVmOptionOrNew.setValue(updatedVmOption);
 

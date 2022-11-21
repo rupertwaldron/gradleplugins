@@ -68,6 +68,31 @@ public class VmOptionsFunctionalTest {
     assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
   }
 
+  @Test
+  public void canRunTaskForMissingVmOptions() throws IOException {
+
+    createTestConfigWithMissingVumOptionFile();
+
+    // Setup the test build
+    File projectDir = new File("build/functionalTest");
+    Files.createDirectories(projectDir.toPath());
+    writeString(new File(projectDir, "settings.gradle"), "");
+
+    writeString(new File(projectDir, "build.gradle"), generateGradleForMultipleVmOptions());
+
+    // Run the build
+    BuildResult result = GradleRunner.create()
+                             .forwardOutput()
+                             .withPluginClasspath()
+                             .withArguments("vmopts")
+                             .withProjectDir(projectDir)
+                             .build();
+
+    // Verify the result
+    assertTrue(result.getOutput().contains("-DjwtToken=22"));
+    assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
+  }
+
   private void writeString(File file, String string) throws IOException {
     try (Writer writer = new FileWriter(file)) {
       writer.write(string);
@@ -119,6 +144,34 @@ public class VmOptionsFunctionalTest {
             <module name="UsePlugin.main" />
             <option name="SPRING_BOOT_MAIN_CLASS" value="com.ruppyrup.Main" />
             <option name="VM_PARAMETERS" value="-DjwtToken=44.61098798956047 -DdbPassword=bob" />
+            <extension name="coverage">
+              <pattern>
+                <option name="PATTERN" value="com.ruppyrup.*" />
+                <option name="ENABLED" value="true" />
+              </pattern>
+            </extension>
+            <method v="2">
+              <option name="Make" enabled="true" />
+            </method>
+          </configuration>
+        </component>
+        """;
+
+    try (var fileWriter = new FileWriter("./src/functionalTest/resources/TestConfig.xml")) {
+      fileWriter.write(fileContents);
+    } catch (IOException iox) {
+      System.out.println("Exception io = " + iox.getMessage());
+    }
+  }
+
+  private void createTestConfigWithMissingVumOptionFile() {
+    String fileContents = """
+        <component name="ProjectRunConfigurationManager">
+          <configuration default="false" name="Main" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+            <option name="ACTIVE_PROFILES" />
+            <module name="UsePlugin.main" />
+            <option name="SPRING_BOOT_MAIN_CLASS" value="com.ruppyrup.Main" />
+            <option name="VM_PARAMETERS" value="-DdbPassword=bob" />
             <extension name="coverage">
               <pattern>
                 <option name="PATTERN" value="com.ruppyrup.*" />
