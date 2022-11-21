@@ -43,6 +43,31 @@ public class VmOptionsFunctionalTest {
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
   }
 
+  @Test
+  public void canRunTaskForMoreVmOptions() throws IOException {
+
+    createTestConfigFile();
+
+    // Setup the test build
+    File projectDir = new File("build/functionalTest");
+    Files.createDirectories(projectDir.toPath());
+    writeString(new File(projectDir, "settings.gradle"), "");
+
+    writeString(new File(projectDir, "build.gradle"), generateGradleForMultipleVmOptions());
+
+    // Run the build
+    BuildResult result = GradleRunner.create()
+                             .forwardOutput()
+                             .withPluginClasspath()
+                             .withArguments("vmopts")
+                             .withProjectDir(projectDir)
+                             .build();
+
+    // Verify the result
+    assertTrue(result.getOutput().contains("-DjwtToken=22"));
+    assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
+  }
+
   private void writeString(File file, String string) throws IOException {
     try (Writer writer = new FileWriter(file)) {
       writer.write(string);
@@ -60,6 +85,24 @@ public class VmOptionsFunctionalTest {
         def output = vmopts {
           runConfigFilePath = "./src/functionalTest/resources/TestConfig.xml"
           vmOption = "jwtToken"
+        }
+                    
+        println "File output = ${output}"
+        """;
+
+    return buildGradle;
+  }
+
+  private String generateGradleForMultipleVmOptions() {
+
+    String buildGradle = """
+        plugins {
+            id('com.example.greeting')
+        }
+                    
+        def output = vmopts {
+          runConfigFilePath = "./src/functionalTest/resources/TestConfig.xml"
+          vmOption = "jwtToken,dbPassword"
         }
                     
         println "File output = ${output}"

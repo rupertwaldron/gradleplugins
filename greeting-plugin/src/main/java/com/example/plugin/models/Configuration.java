@@ -38,9 +38,14 @@ public class Configuration implements Serializable {
                                     .findFirst()
                                     .orElse(new Option());
 
+    System.out.println("Found option is :: " + foundVmOptionOrNew.getValue());
+
     String vmOptionList = foundVmOptionOrNew.getValue();
     int startIndex = vmOptionList.indexOf(vmOption) + vmOption.length();
-    int endIndex = vmOptionList.indexOf(" ");
+    int endIndex = vmOptionList.indexOf(" ", startIndex) == -1 ? vmOptionList.length() : vmOptionList.indexOf(" ", startIndex);
+
+    System.out.println("Start index of " + vmOption + " = " + startIndex);
+    System.out.println("End index = " + endIndex);
 
     String optionValue = vmOptionList.substring(startIndex, endIndex);
     System.out.println("Option value = " + optionValue);
