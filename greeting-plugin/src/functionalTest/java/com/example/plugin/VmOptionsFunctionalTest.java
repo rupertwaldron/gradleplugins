@@ -20,7 +20,7 @@ public class VmOptionsFunctionalTest {
     createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob");
 
     // Setup the test build
-    BuildResult result = getBuildResult("jwtToken");
+    BuildResult result = getBuildResult("jwtToken", "./src/functionalTest/resources/TestConfig.xml");
 
     // Verify the result
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
@@ -32,7 +32,7 @@ public class VmOptionsFunctionalTest {
     createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob");
 
     // Setup the test build
-    BuildResult result = getBuildResult("jwtToken,dbPassword");
+    BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
 
     // Verify the result
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
@@ -45,19 +45,32 @@ public class VmOptionsFunctionalTest {
     createTestConfigFileWithVmParams("-DdbPassword=bob");
 
     // Setup the test build
-    BuildResult result = getBuildResult("jwtToken,dbPassword");
+    BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
 
     // Verify the result
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
     assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
   }
 
-  private BuildResult getBuildResult(final String jwtToken) throws IOException {
+  @Test
+  public void canUpdateMultipleFilesIfArgIsDirectory() throws IOException {
+
+    createTestConfigFileWithVmParams("-DdbPassword=bob");
+
+    // Setup the test build
+    BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
+
+    // Verify the result
+    assertTrue(result.getOutput().contains("-DjwtToken=22"));
+    assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
+  }
+
+  private BuildResult getBuildResult(final String jwtToken, final String filePath) throws IOException {
     File projectDir = new File("build/functionalTest");
     Files.createDirectories(projectDir.toPath());
     writeString(new File(projectDir, "settings.gradle"), "");
 
-    writeString(new File(projectDir, "build.gradle"), generateGradleForVmOptions(jwtToken));
+    writeString(new File(projectDir, "build.gradle"), generateGradleForVmOptions(jwtToken, filePath));
 
     // Run the build
     return GradleRunner.create()
@@ -75,7 +88,7 @@ public class VmOptionsFunctionalTest {
   }
 
 
-  private String generateGradleForVmOptions(final String vmOption) {
+  private String generateGradleForVmOptions(final String vmOption, final String filePath) {
 
     String buildGradle = """
         plugins {
@@ -83,7 +96,25 @@ public class VmOptionsFunctionalTest {
         }
                     
         def output = vmopts {
-          runConfigFilePath = "./src/functionalTest/resources/TestConfig.xml"
+          runConfigFilePath = "%s"
+          vmOption = "%s"
+        }
+                    
+        println "File output = ${output}"
+        """;
+
+    return String.format(buildGradle, filePath, vmOption);
+  }
+
+  private String generateGradleForVmOptionsDirectory(final String vmOption) {
+
+    String buildGradle = """
+        plugins {
+            id('com.example.greeting')
+        }
+                    
+        def output = vmopts {
+          runConfigFilePath = "./src/functionalTest/resources"
           vmOption = "%s"
         }
                     

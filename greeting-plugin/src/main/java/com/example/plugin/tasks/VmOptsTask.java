@@ -31,39 +31,47 @@ public abstract class VmOptsTask extends DefaultTask {
 
     Map<String, String> vmMapping = Map.of("jwtToken", "22", "dbPassword", "monkey");
 
+    JAXBContext jaxbContext = JAXBContext.newInstance(Component.class);
+    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+    Marshaller marshaller = jaxbContext.createMarshaller();
+    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
     Component component = null;
 
-    try {
-      var file = new File(getRunConfigFilePath().get());
-      JAXBContext jaxbContext = JAXBContext.newInstance(Component.class);
+    var file = new File(getRunConfigFilePath().get());
 
-      Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-      component = (Component) jaxbUnmarshaller.unmarshal(file);
-
-
-      System.out.println("Component = " + component);
-
-      Component updatedComponent = Optional.ofNullable(component).orElse(new Component());
-
-      List<String> vmOptionsToUpdate = Arrays.asList(getVmOption().get().split(","));
-      System.out.println("Args = " + vmOptionsToUpdate);
-
-      vmOptionsToUpdate.forEach(vmOption -> {
-        updatedComponent.setVmOption(vmOption, vmMapping.get(vmOption));
-        System.out.println("Updated Component with " + vmOption + " = " + updatedComponent);
+    if (file.isDirectory()) {
+      List<File> files = Arrays.asList(file.listFiles());
+      files.forEach(f -> {
+        try {
+          updateFile(vmMapping, jaxbUnmarshaller, marshaller, f);
+        } catch (JAXBException e) {
+          throw new RuntimeException(e);
+        }
       });
-
-
-
-      Marshaller marshaller = jaxbContext.createMarshaller();
-
-      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
-      marshaller.marshal(updatedComponent, file);
-
-
-    } catch (Exception ex) {
-      throw ex;
+    } else {
+      updateFile(vmMapping, jaxbUnmarshaller, marshaller, file);
     }
+
+  }
+
+  private void updateFile(final Map<String, String> vmMapping, final Unmarshaller jaxbUnmarshaller, final Marshaller marshaller, final File file) throws JAXBException {
+    Component component;
+    component = (Component) jaxbUnmarshaller.unmarshal(file);
+
+    System.out.println("Component = " + component);
+
+    Component updatedComponent = Optional.ofNullable(component).orElse(new Component());
+
+    List<String> vmOptionsToUpdate = Arrays.asList(getVmOption().get().split(","));
+    System.out.println("Args = " + vmOptionsToUpdate);
+
+    vmOptionsToUpdate.forEach(vmOption -> {
+      updatedComponent.setVmOption(vmOption, vmMapping.get(vmOption));
+      System.out.println("Updated Component with " + vmOption + " = " + updatedComponent);
+    });
+
+
+    marshaller.marshal(updatedComponent, file);
   }
 }
