@@ -1,7 +1,5 @@
 package com.example.plugin;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
@@ -12,56 +10,29 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class VmOptionsFunctionalTest {
 
   @Test
-  public void canRunTask() throws IOException {
+  public void canUpdateOneOption() throws IOException {
 
-    createTestConfigFile();
+    createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob");
 
     // Setup the test build
-    File projectDir = new File("build/functionalTest");
-    Files.createDirectories(projectDir.toPath());
-    writeString(new File(projectDir, "settings.gradle"), "");
-
-    writeString(new File(projectDir, "build.gradle"), generateGradle());
-
-    // Run the build
-    BuildResult result = GradleRunner.create()
-                             .forwardOutput()
-                             .withPluginClasspath()
-                             .withArguments("vmopts")
-                             .withProjectDir(projectDir)
-                             .build();
+    BuildResult result = getBuildResult("jwtToken");
 
     // Verify the result
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
   }
 
   @Test
-  public void canRunTaskForMoreVmOptions() throws IOException {
+  public void canUpdateMoreThanOneOption() throws IOException {
 
-    createTestConfigFile();
+    createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob");
 
     // Setup the test build
-    File projectDir = new File("build/functionalTest");
-    Files.createDirectories(projectDir.toPath());
-    writeString(new File(projectDir, "settings.gradle"), "");
-
-    writeString(new File(projectDir, "build.gradle"), generateGradleForMultipleVmOptions());
-
-    // Run the build
-    BuildResult result = GradleRunner.create()
-                             .forwardOutput()
-                             .withPluginClasspath()
-                             .withArguments("vmopts")
-                             .withProjectDir(projectDir)
-                             .build();
+    BuildResult result = getBuildResult("jwtToken,dbPassword");
 
     // Verify the result
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
@@ -69,28 +40,32 @@ public class VmOptionsFunctionalTest {
   }
 
   @Test
-  public void canRunTaskForMissingVmOptions() throws IOException {
+  public void canAddOptionWhenMissingFromFile() throws IOException {
 
-    createTestConfigWithMissingVumOptionFile();
+    createTestConfigFileWithVmParams("-DdbPassword=bob");
 
     // Setup the test build
-    File projectDir = new File("build/functionalTest");
-    Files.createDirectories(projectDir.toPath());
-    writeString(new File(projectDir, "settings.gradle"), "");
-
-    writeString(new File(projectDir, "build.gradle"), generateGradleForMultipleVmOptions());
-
-    // Run the build
-    BuildResult result = GradleRunner.create()
-                             .forwardOutput()
-                             .withPluginClasspath()
-                             .withArguments("vmopts")
-                             .withProjectDir(projectDir)
-                             .build();
+    BuildResult result = getBuildResult("jwtToken,dbPassword");
 
     // Verify the result
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
     assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
+  }
+
+  private BuildResult getBuildResult(final String jwtToken) throws IOException {
+    File projectDir = new File("build/functionalTest");
+    Files.createDirectories(projectDir.toPath());
+    writeString(new File(projectDir, "settings.gradle"), "");
+
+    writeString(new File(projectDir, "build.gradle"), generateGradleForVmOptions(jwtToken));
+
+    // Run the build
+    return GradleRunner.create()
+               .forwardOutput()
+               .withPluginClasspath()
+               .withArguments("vmopts")
+               .withProjectDir(projectDir)
+               .build();
   }
 
   private void writeString(File file, String string) throws IOException {
@@ -100,7 +75,7 @@ public class VmOptionsFunctionalTest {
   }
 
 
-  private String generateGradle() {
+  private String generateGradleForVmOptions(final String vmOption) {
 
     String buildGradle = """
         plugins {
@@ -109,41 +84,23 @@ public class VmOptionsFunctionalTest {
                     
         def output = vmopts {
           runConfigFilePath = "./src/functionalTest/resources/TestConfig.xml"
-          vmOption = "jwtToken"
+          vmOption = "%s"
         }
                     
         println "File output = ${output}"
         """;
 
-    return buildGradle;
+    return String.format(buildGradle, vmOption);
   }
 
-  private String generateGradleForMultipleVmOptions() {
-
-    String buildGradle = """
-        plugins {
-            id('com.example.greeting')
-        }
-                    
-        def output = vmopts {
-          runConfigFilePath = "./src/functionalTest/resources/TestConfig.xml"
-          vmOption = "jwtToken,dbPassword"
-        }
-                    
-        println "File output = ${output}"
-        """;
-
-    return buildGradle;
-  }
-
-  private void createTestConfigFile() {
+  private void createTestConfigFileWithVmParams(String paramList) {
     String fileContents = """
         <component name="ProjectRunConfigurationManager">
           <configuration default="false" name="Main" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
             <option name="ACTIVE_PROFILES" />
             <module name="UsePlugin.main" />
             <option name="SPRING_BOOT_MAIN_CLASS" value="com.ruppyrup.Main" />
-            <option name="VM_PARAMETERS" value="-DjwtToken=44.61098798956047 -DdbPassword=bob" />
+            <option name="VM_PARAMETERS" value="%s" />
             <extension name="coverage">
               <pattern>
                 <option name="PATTERN" value="com.ruppyrup.*" />
@@ -157,34 +114,12 @@ public class VmOptionsFunctionalTest {
         </component>
         """;
 
-    try (var fileWriter = new FileWriter("./src/functionalTest/resources/TestConfig.xml")) {
-      fileWriter.write(fileContents);
-    } catch (IOException iox) {
-      System.out.println("Exception io = " + iox.getMessage());
-    }
+    String contentsWithParams = String.format(fileContents, paramList);
+
+    witeContentsToFile(contentsWithParams);
   }
 
-  private void createTestConfigWithMissingVumOptionFile() {
-    String fileContents = """
-        <component name="ProjectRunConfigurationManager">
-          <configuration default="false" name="Main" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-            <option name="ACTIVE_PROFILES" />
-            <module name="UsePlugin.main" />
-            <option name="SPRING_BOOT_MAIN_CLASS" value="com.ruppyrup.Main" />
-            <option name="VM_PARAMETERS" value="-DdbPassword=bob" />
-            <extension name="coverage">
-              <pattern>
-                <option name="PATTERN" value="com.ruppyrup.*" />
-                <option name="ENABLED" value="true" />
-              </pattern>
-            </extension>
-            <method v="2">
-              <option name="Make" enabled="true" />
-            </method>
-          </configuration>
-        </component>
-        """;
-
+  private static void witeContentsToFile(final String fileContents) {
     try (var fileWriter = new FileWriter("./src/functionalTest/resources/TestConfig.xml")) {
       fileWriter.write(fileContents);
     } catch (IOException iox) {
