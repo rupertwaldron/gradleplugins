@@ -41,8 +41,10 @@ public abstract class VmOptsTask extends DefaultTask {
     var file = new File(getRunConfigFilePath().get());
 
     if (file.isDirectory()) {
+      System.out.println(file + " is a directory");
       List<File> files = Arrays.asList(file.listFiles());
       files.forEach(f -> {
+        System.out.println("Updating for file -> " + f);
         try {
           updateFile(vmMapping, jaxbUnmarshaller, marshaller, f);
         } catch (JAXBException e) {

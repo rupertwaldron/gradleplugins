@@ -17,7 +17,7 @@ public class VmOptionsFunctionalTest {
   @Test
   public void canUpdateOneOption() throws IOException {
 
-    createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob");
+    createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob", "TestConfig.xml");
 
     // Setup the test build
     BuildResult result = getBuildResult("jwtToken", "./src/functionalTest/resources/TestConfig.xml");
@@ -29,7 +29,7 @@ public class VmOptionsFunctionalTest {
   @Test
   public void canUpdateMoreThanOneOption() throws IOException {
 
-    createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob");
+    createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob", "TestConfig.xml");
 
     // Setup the test build
     BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
@@ -42,7 +42,8 @@ public class VmOptionsFunctionalTest {
   @Test
   public void canAddOptionWhenMissingFromFile() throws IOException {
 
-    createTestConfigFileWithVmParams("-DdbPassword=bob");
+    createTestConfigFileWithVmParams("-DdbPassword=bob", "TestConfig.xml");
+
 
     // Setup the test build
     BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
@@ -55,10 +56,11 @@ public class VmOptionsFunctionalTest {
   @Test
   public void canUpdateMultipleFilesIfArgIsDirectory() throws IOException {
 
-    createTestConfigFileWithVmParams("-DdbPassword=bob");
+    createTestConfigFileWithVmParams("-DdbPassword=bob", "TestMulti1.xml");
+    createTestConfigFileWithVmParams("-DjwtToken=44.61098798956047 -DdbPassword=bob", "TestMulti2.xml");
 
     // Setup the test build
-    BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
+    BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources");
 
     // Verify the result
     assertTrue(result.getOutput().contains("-DjwtToken=22"));
@@ -106,25 +108,7 @@ public class VmOptionsFunctionalTest {
     return String.format(buildGradle, filePath, vmOption);
   }
 
-  private String generateGradleForVmOptionsDirectory(final String vmOption) {
-
-    String buildGradle = """
-        plugins {
-            id('com.example.greeting')
-        }
-                    
-        def output = vmopts {
-          runConfigFilePath = "./src/functionalTest/resources"
-          vmOption = "%s"
-        }
-                    
-        println "File output = ${output}"
-        """;
-
-    return String.format(buildGradle, vmOption);
-  }
-
-  private void createTestConfigFileWithVmParams(String paramList) {
+  private void createTestConfigFileWithVmParams(String paramList, String fileName) {
     String fileContents = """
         <component name="ProjectRunConfigurationManager">
           <configuration default="false" name="Main" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
@@ -147,11 +131,11 @@ public class VmOptionsFunctionalTest {
 
     String contentsWithParams = String.format(fileContents, paramList);
 
-    witeContentsToFile(contentsWithParams);
+    witeContentsToFile(contentsWithParams, fileName);
   }
 
-  private static void witeContentsToFile(final String fileContents) {
-    try (var fileWriter = new FileWriter("./src/functionalTest/resources/TestConfig.xml")) {
+  private static void witeContentsToFile(final String fileContents, final String fileName) {
+    try (var fileWriter = new FileWriter("./src/functionalTest/resources/" + fileName)) {
       fileWriter.write(fileContents);
     } catch (IOException iox) {
       System.out.println("Exception io = " + iox.getMessage());
