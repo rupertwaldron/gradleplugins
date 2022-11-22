@@ -1,7 +1,10 @@
 package com.example.plugin;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -10,9 +13,27 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@WireMockTest(httpPort = 9000)
 public class VmOptionsFunctionalTest {
+
+  private static final String APPLICATION_JSON = "application/json";
+  private static final String USERNAME = "username";
+  private static final String PASSWORD = "password";
+
+  @BeforeEach
+  public void setupWireMock() {
+    stubFor(post(WireMock.urlEqualTo("/api/jwt"))
+                .withBasicAuth(USERNAME, PASSWORD)
+                .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", APPLICATION_JSON)
+                                .withBody("dummy-token")));
+  }
 
   @Test
   public void canUpdateOneOption() throws IOException {
@@ -23,7 +44,7 @@ public class VmOptionsFunctionalTest {
     BuildResult result = getBuildResult("jwtToken", "./src/functionalTest/resources/TestConfig.xml");
 
     // Verify the result
-    assertTrue(result.getOutput().contains("-DjwtToken=22"));
+    assertTrue(result.getOutput().contains("-DjwtToken=dummy-token"));
   }
 
   @Test
@@ -35,7 +56,7 @@ public class VmOptionsFunctionalTest {
     BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
 
     // Verify the result
-    assertTrue(result.getOutput().contains("-DjwtToken=22"));
+    assertTrue(result.getOutput().contains("-DjwtToken=dummy-token"));
     assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
   }
 
@@ -49,7 +70,7 @@ public class VmOptionsFunctionalTest {
     BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources/TestConfig.xml");
 
     // Verify the result
-    assertTrue(result.getOutput().contains("-DjwtToken=22"));
+    assertTrue(result.getOutput().contains("-DjwtToken=dummy-token"));
     assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
   }
 
@@ -63,7 +84,7 @@ public class VmOptionsFunctionalTest {
     BuildResult result = getBuildResult("jwtToken,dbPassword", "./src/functionalTest/resources");
 
     // Verify the result
-    assertTrue(result.getOutput().contains("-DjwtToken=22"));
+    assertTrue(result.getOutput().contains("-DjwtToken=dummy-token"));
     assertTrue(result.getOutput().contains("-DdbPassword=monkey"));
   }
 

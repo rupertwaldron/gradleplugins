@@ -12,7 +12,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +34,10 @@ public abstract class VmOptsTask extends DefaultTask {
   @TaskAction
   public void updateRunConfig() throws IOException, JAXBException {
 
-    Map<String, String> vmMapping = Map.of("jwtToken", "22", "dbPassword", "monkey");
+
+    String jwtToken = goAndFetchJwt("http://localhost:9000/api/jwt");
+
+    Map<String, String> vmMapping = Map.of("jwtToken", jwtToken, "dbPassword", "monkey");
 
     JAXBContext jaxbContext = JAXBContext.newInstance(Component.class);
     Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -75,5 +83,28 @@ public abstract class VmOptsTask extends DefaultTask {
 
 
     marshaller.marshal(updatedComponent, file);
+  }
+
+  private String goAndFetchJwt(final String jwtUrl) {
+
+    Base64.Encoder encoder = Base64.getEncoder();
+    StringBuilder result = new StringBuilder();
+    HttpClient client = HttpClient.newHttpClient();
+
+    String authorization = "username:password";
+
+    HttpRequest request = HttpRequest.newBuilder()
+                              .uri(URI.create(jwtUrl))
+                              .header("Content-Type", "application/json")
+                              .header("Authorization", "Basic " + encoder.encodeToString(authorization.getBytes()))
+                              .POST(HttpRequest.BodyPublishers.noBody())
+                              .build();
+
+    client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+        .thenApply(HttpResponse::body)
+        .thenAccept(result::append)
+        .join();
+
+    return result.toString();
   }
 }
