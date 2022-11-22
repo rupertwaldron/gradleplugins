@@ -4,33 +4,26 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.List;
 
-@XmlRootElement
+@XmlRootElement(name = "component")
+@XmlAccessorType(XmlAccessType.FIELD)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Component {
-  private String name;
-  private List<Option> options;
-
+@Data
+public class Component implements Serializable  {
   @XmlAttribute
-  public String getName() {
-    return name;
-  }
-
+  private String name;
   @XmlElement
-  public List<Option> getOptions() {
-    return options;
-  }
+  private Configuration configuration;
 
-  public void setName(final String name) {
-    this.name = name;
-  }
-
-  public void setOptions(final List<Option> options) {
-    this.options = options;
+  public void setVmOption(String vmOption, String value) {
+    configuration.setVmOption(vmOption, value);
   }
 }
