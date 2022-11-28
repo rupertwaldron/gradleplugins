@@ -8,7 +8,7 @@ import java.util.Map;
 public abstract class QaParams extends DefaultTask {
 
   @TaskAction
-  public Map<String, String> getQaParams() {
+  public Map<String, String> retreiveParams() {
     return Map.of("propA", "43", "propB", "monkey");
   }
 

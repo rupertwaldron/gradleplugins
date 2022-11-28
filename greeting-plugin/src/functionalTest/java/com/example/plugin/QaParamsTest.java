@@ -56,7 +56,7 @@ public class QaParamsTest {
                     
         def params = qaparams {
       
-        }.getQaParams()
+        }.retreiveParams()
                     
         println "prop A = ${params.get('propA')}"
         println "prop B = ${params.get('propB')}"
